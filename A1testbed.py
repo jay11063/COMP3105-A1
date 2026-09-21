@@ -6,7 +6,7 @@
 #       We will use a different script to test your codes. 
 import numpy as np
 from matplotlib import pyplot as plt
-import YourName.A1codes as A1codes
+import JaeyoonLee.A1codes as A1codes
 
 
 def _plotReg():

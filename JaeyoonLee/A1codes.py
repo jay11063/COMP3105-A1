@@ -1,6 +1,6 @@
 # COMP 3105A Introduction to Machine Learning - Fall 2026
 # Assignment 1
-# Name:        <이름>
+# Name: Jaeyoon Lee
 # Student ID:  <학번>
 #
 # ============================================================================
@@ -26,55 +26,56 @@ solvers.options['show_progress'] = False
 
 def minimizeL2(X, y):
     """
-    Q1(a) [0.5%]  L2 손실 회귀의 해석해(closed-form solution).
-
-        w = argmin_w  (1 / 2n) * ||Xw - y||_2^2  =  (X^T X)^{-1} X^T y
-
+    w = argmin_w  (1 / 2n) * ||Xw - y||_2^2  =  (X^T X)^{-1} X^T y
     Args:
-        X: (n, d) 입력 행렬
-        y: (n, 1) 타깃 벡터
+        X: (n, d)
+        y: (n, 1)
     Returns:
-        w: (d, 1) 가중치 벡터
-
-    구현 메모:
-      - 역행렬을 직접 구하지 말고 선형계를 푸는 쪽이 수치적으로 안정적이다.
-        (np.linalg.solve vs np.linalg.inv 차이를 생각해볼 것)
-      - 반환 shape이 반드시 (d, 1)인지 확인할 것. (d,) 가 되면 안 됨.
+        w: (d, 1)
     """
     # TODO: 구현
-    raise NotImplementedError
-
+    XT = X.T @ X # XT: (d, d)
+    yT = X.T @ y # yT: (d, 1)
+    w = np.linalg.solve(XT, yT) # w: (d, 1)
+    return w
 
 def minimizeL1(X, y):
     """
-    Q1(b.2) [1%]  L1 손실 회귀를 선형계획법(LP)으로 푼다.
+    w = argmin_w  (1/n) * ||Xw - y||_1
 
-        w = argmin_w  (1/n) * ||Xw - y||_1
-
-    LP 형태 (joint variable u = [w; delta] in R^{d+n}):
+    LP (joint variable u = [w; delta] in R^{d+n}):
         min_{w,delta}  delta^T 1_n
         s.t.           -delta <= 0_n
                        Xw - y <= delta
                        y - Xw <= delta
 
     Args:
-        X: (n, d) 입력 행렬
-        y: (n, 1) 타깃 벡터
+        X: (n, d)
+        y: (n, 1)
     Returns:
-        w: (d, 1) 가중치 벡터
-
-    구현 메모:
-      - (b.1)에서 찾은 버그 4개를 반영한 올바른 버전을 여기 쓸 것.
-      - u 의 순서(w 먼저? delta 먼저?)를 정하고, c / G / h 를 그 순서에
-        일관되게 맞출 것. 순서를 섞으면 조용히 틀린 답이 나온다.
-      - 각 블록의 shape 을 종이에 먼저 적고 코딩할 것:
-            c: (d+n, 1)   G: (3n, d+n)   h: (3n, 1)
-      - cvxopt 는 NumPy 배열을 받지 않는다. cvxopt.matrix 로 변환할 것.
-        (cvxopt.matrix 는 float64 를 요구하니 dtype 도 확인)
-      - 결과 res['x'] 에서 w 부분만 슬라이싱해 (d, 1) 로 반환.
+        w: (d, 1)
     """
     # TODO: 구현
-    raise NotImplementedError
+    # first d variables are w, second n variables are delta
+    n, d = X.shape
+
+    c = np.concatenate([np.zeros(d), np.ones(n)]) # c: (d+n, 1) / LINE 5: [BUG...], because [REASON...].
+
+    G = np.concatenate([np.concatenate([np.zeros_like(X), -np.eye(n)], axis=1), # -delta ⪯ 0
+                        np.concatenate([X, -np.eye(n)], axis=1), # Xw - y ⪯ delta
+                        np.concatenate([-X, -np.eye(n)], axis=1) # y - Xw ⪯ delta / LINE 9: [BUG...], because [REASON...].
+                       ]) # G: (3n, d+n)
+
+    h = np.concatenate([np.zeros_like(y), y, -y])
+
+    cvxopt.solvers.options["show_progress"] = False
+
+    c = cvxopt.matrix(c.astype(float)) # cvxopt.matrix requires float64 dtype
+    G = cvxopt.matrix(G.astype(float))
+    h = cvxopt.matrix(h.astype(float))
+    res = cvxopt.solvers.lp(c, G, h) # LINE 15: [BUG...], because [REASON...].
+    w = res['x'][:d] # LINE 16: [BUG...], because [REASON...].
+    return np.array(w)
 
 
 def minimizeLinf(X, y):
