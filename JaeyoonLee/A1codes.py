@@ -159,50 +159,66 @@ def synRegExperiments():
         # TODO: Evaluate the three models' performance (for each model,
         #       calculate the L2, L1 and L infinity losses on the training
         #       data). Save them to `train_loss`
+        weights = [w_L2, w_L1, w_Linf]
         
+        for model_idx, w in enumerate(weights):
+            # TODO: Evaluate the three models' performance (for each model,
+            # calculate the L2, L1 and L infinity losses on the training
+            # data). Save them to `train_loss`
+            # TODO: 세 모델의 학습 데이터 성능 평가 -> train_loss[r]
+            train_err = ytrain - Xtrain @ w
+            test_err = ytest - Xtest @ w
+
+            train_loss[r, model_idx, 0] = 0.5 * np.mean(train_err ** 2) # L2
+            train_loss[r, model_idx, 1] = np.mean(np.abs(train_err))    # L1
+            train_loss[r, model_idx, 2] = np.max(np.abs(train_err))     # Linf
+
+            test_loss[r, model_idx, 0] = 0.5 * np.mean(test_err ** 2) # L2
+            test_loss[r, model_idx, 1] = np.mean(np.abs(test_err))    # L1
+            test_loss[r, model_idx, 2] = np.max(np.abs(test_err))     # Linf
         # Calculate predicted values for each model
-        y_pred_L2_train = Xtrain @ w_L2
-        y_pred_L1_train = Xtrain @ w_L1
-        y_pred_Linf_train = Xtrain @ w_Linf
+        # y_pred_L2_train = Xtrain @ w_L2
+        # y_pred_L1_train = Xtrain @ w_L1
+        # y_pred_Linf_train = Xtrain @ w_Linf
 
-        # L2 eval
-        train_loss[r, 0, 0] = 0.5 * np.mean((ytrain - y_pred_L2_train) ** 2)
-        train_loss[r, 0, 1] = np.mean(np.abs(ytrain - y_pred_L2_train))
-        train_loss[r, 0, 2] = np.max(np.abs(ytrain - y_pred_L2_train))
+        # # L2 eval
+        # train_loss[r, 0, 0] = 0.5 * np.mean((ytrain - y_pred_L2_train) ** 2)
+        # train_loss[r, 0, 1] = np.mean(np.abs(ytrain - y_pred_L2_train))
+        # train_loss[r, 0, 2] = np.max(np.abs(ytrain - y_pred_L2_train))
 
-        # L1 eval
-        train_loss[r, 1, 0] = 0.5 * np.mean((ytrain - y_pred_L1_train) ** 2)
-        train_loss[r, 1, 1] = np.mean(np.abs(ytrain - y_pred_L1_train))
-        train_loss[r, 1, 2] = np.max(np.abs(ytrain - y_pred_L1_train))
+        # # L1 eval
+        # train_loss[r, 1, 0] = 0.5 * np.mean((ytrain - y_pred_L1_train) ** 2)
+        # train_loss[r, 1, 1] = np.mean(np.abs(ytrain - y_pred_L1_train))
+        # train_loss[r, 1, 2] = np.max(np.abs(ytrain - y_pred_L1_train))
 
-        # Linf eval
-        train_loss[r, 2, 0] = 0.5 * np.mean((ytrain - y_pred_Linf_train) ** 2)
-        train_loss[r, 2, 1] = np.mean(np.abs(ytrain - y_pred_Linf_train))
-        train_loss[r, 2, 2] = np.max(np.abs(ytrain - y_pred_Linf_train))
+        # # Linf eval
+        # train_loss[r, 2, 0] = 0.5 * np.mean((ytrain - y_pred_Linf_train) ** 2)
+        # train_loss[r, 2, 1] = np.mean(np.abs(ytrain - y_pred_Linf_train))
+        # train_loss[r, 2, 2] = np.max(np.abs(ytrain - y_pred_Linf_train))
 
-        # TODO: Evaluate the three models' performance (for each model,
-        #       calculate the L2, L1 and L infinity losses on the test
-        #       data). Save them to `test_loss` 
+        # # TODO: Evaluate the three models' performance (for each model,
+        # #       calculate the L2, L1 and L infinity losses on the test
+        # #       data). Save them to `test_loss` 
 
-        # Calculate predicted values for each model
-        y_pred_L2_test = Xtest @ w_L2
-        y_pred_L1_test = Xtest @ w_L1
-        y_pred_Linf_test = Xtest @ w_Linf
+        # # Calculate predicted values for each model
+        # y_pred_L2_test = Xtest @ w_L2
+        # y_pred_L1_test = Xtest @ w_L1
+        # y_pred_Linf_test = Xtest @ w_Linf
 
-        # L2 eval
-        test_loss[r, 0, 0] = 0.5 * np.mean((ytest - y_pred_L2_test) ** 2)
-        test_loss[r, 0, 1] = np.mean(np.abs(ytest - y_pred_L2_test))
-        test_loss[r, 0, 2] = np.max(np.abs(ytest - y_pred_L2_test))
+        # # L2 eval
+        # test_loss[r, 0, 0] = 0.5 * np.mean((ytest - y_pred_L2_test) ** 2)
+        # test_loss[r, 0, 1] = np.mean(np.abs(ytest - y_pred_L2_test))
+        # test_loss[r, 0, 2] = np.max(np.abs(ytest - y_pred_L2_test))
 
-        # L1 eval
-        test_loss[r, 1, 0] = 0.5 * np.mean((ytest - y_pred_L1_test) ** 2)
-        test_loss[r, 1, 1] = np.mean(np.abs(ytest - y_pred_L1_test))
-        test_loss[r, 1, 2] = np.max(np.abs(ytest - y_pred_L1_test))
+        # # L1 eval
+        # test_loss[r, 1, 0] = 0.5 * np.mean((ytest - y_pred_L1_test) ** 2)
+        # test_loss[r, 1, 1] = np.mean(np.abs(ytest - y_pred_L1_test))
+        # test_loss[r, 1, 2] = np.max(np.abs(ytest - y_pred_L1_test))
 
-        # Linf eval
-        test_loss[r, 2, 0] = 0.5 * np.mean((ytest - y_pred_Linf_test) ** 2)
-        test_loss[r, 2, 1] = np.mean(np.abs(ytest - y_pred_Linf_test))
-        test_loss[r, 2, 2] = np.max(np.abs(ytest - y_pred_Linf_test))
+        # # Linf eval
+        # test_loss[r, 2, 0] = 0.5 * np.mean((ytest - y_pred_Linf_test) ** 2)
+        # test_loss[r, 2, 1] = np.mean(np.abs(ytest - y_pred_Linf_test))
+        # test_loss[r, 2, 2] = np.max(np.abs(ytest - y_pred_Linf_test))
 
     # TODO: compute the average losses over runs
     train_loss_avg = np.mean(train_loss, axis=0)
@@ -237,8 +253,8 @@ def preprocessCCS(dataset_folder):
 
     df = pd.read_excel(file_path)
     
-    X = df.iloc[:, :-1].to_numpy()
-    y = df.iloc[:,-1:].to_numpy()
+    X = df.iloc[:, :8].to_numpy()
+    y = df.iloc[:,8:9].to_numpy()
 
     return X, y
 
@@ -263,27 +279,50 @@ def runCCS(dataset_folder):
     for r in range(n_runs):
         # TODO: Randomly partition the dataset into two parts (50%
         # training and 50% test) 
-        # TODO: 데이터를 무작위로 50% 학습 / 50% 테스트로 분할
-        #       (sklearn 금지. np.random.permutation 으로 인덱스를 섞을 것)
+        permuted_indices = np.random.permuted_indices(n)
+        n_train = n//2
+
+        train_idx = permuted_indices[:n_train]
+        test_idx = permuted_indices[n_train:]
+
+        Xtrain, ytrain = X[train_idx], y[train_idx]
+        Xtest, ytest =  X[test_idx], y[test_idx]
 
         # TODO: Learn three different models from the training data
         # using L2, L1 and L infinity losses
         # TODO: L2, L1, Linf 손실로 세 모델 학습
+        w_L2 = minimizeL2(Xtrain, ytrain)
+        w_L1 = minimizeL1(Xtrain, ytrain)
+        w_Linf = minimizeLinf(Xtrain, ytrain)
 
-        # TODO: Evaluate the three models' performance (for each model,
-        # calculate the L2, L1 and L infinity losses on the training
-        # data). Save them to `train_loss`
-        # TODO: 세 모델의 학습 데이터 성능 평가 -> train_loss[r]
+        weights = [w_L2, w_L1, w_Linf]
 
-        # TODO: Evaluate the three models' performance (for each model,
-        # calculate the L2, L1 and L infinity losses on the test
-        # data). Save them to `test_loss`
-        # TODO: 세 모델의 테스트 데이터 성능 평가 -> test_loss[r]
-        pass
+        for model_idx, w in enumerate(weights):
+            train_err = ytrain - Xtrain @ w
+            test_err = ytest - Xtest @ w
+
+            # TODO: Evaluate the three models' performance (for each model,
+            # calculate the L2, L1 and L infinity losses on the training
+            # data). Save them to `train_loss`
+            # TODO: 세 모델의 학습 데이터 성능 평가 -> train_loss[r]
+            train_loss[r, model_idx, 0] = 0.5 * np.mean(train_err ** 2) # L2
+            train_loss[r, model_idx, 1] = np.mean(np.abs(train_err))    # L1
+            train_loss[r, model_idx, 2] = np.max(np.abs(train_err))     # Linf
+
+            # TODO: Evaluate the three models' performance (for each model,
+            # calculate the L2, L1 and L infinity losses on the test
+            # data). Save them to `test_loss`
+            # TODO: 세 모델의 테스트 데이터 성능 평가 -> test_loss[r]
+            test_loss[r, model_idx, 0] = 0.5 * np.mean(test_err ** 2) # L2
+            test_loss[r, model_idx, 1] = np.mean(np.abs(test_err))    # L1
+            test_loss[r, model_idx, 2] = np.max(np.abs(test_err))     # Linf
 
     # TODO: compute the average losses over runs / 50회 평균 계산
+    train_loss_avg = np.mean(train_loss, axis=0)
+    test_loss_avg = np.mean(test_loss, axis=0)
+    
     # TODO: return a 3-by-3 training loss variable and a 3-by-3 test loss variable / (3, 3) train_loss 와 (3, 3) test_loss 반환
-    raise NotImplementedError
+    return train_loss_avg, test_loss_avg
 
 
 
