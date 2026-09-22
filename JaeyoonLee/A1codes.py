@@ -90,34 +90,28 @@ def minimizeLinf(X, y):
                        y - Xw <= delta * 1_n
 
     Args:
-        X: (n, d) 입력 행렬
-        y: (n, 1) 타깃 벡터
+        X: (n, d)
+        y: (n, 1)
     Returns:
-        w: (d, 1) 가중치 벡터
+        w: (d, 1)
 
-    구현 메모:
-      - 반드시 리포트의 (c.1)~(c.4) 유도를 먼저 끝내고 그 결과를 옮길 것.
-        유도가 없으면 이 부분 점수도 받지 못한다.
-      - 블록 shape:
+      - shapes:
             c:     (d+1, 1)
             G^(1): (1, d+1)     h^(1): (1, 1)
             G^(2): (n, d+1)     h^(2): (n, 1)
             G^(3): (n, d+1)     h^(3): (n, 1)
         -> G: (2n+1, d+1),  h: (2n+1, 1)
-      - np.zeros / np.ones / np.concatenate 조합으로 블록을 쌓을 것.
-      - cvxopt.matrix 변환 잊지 말 것.
     """
-    # TODO: 구현
     n, d = X.shape
 
     c = np.concatenate([np.zeros(d), np.ones(1)])
 
-    G = np.concatenate([np.concatenate([np.zeros((1, d)), -np.ones((1, 1))], axis=1),   # G(1) = [0_d^T, -1] : (1, d+1)
-                        np.concatenate([X, -np.ones((n, 1))], axis=1),                  # G(2) = [X, -1_n]   : (n, d+1)
-                        np.concatenate([-X, -np.ones((n, 1))], axis=1)                  # G(3) = [-X, -1_n]  : (n, d+1)
+    G = np.concatenate([np.concatenate([np.zeros((1, d)), -np.ones((1, 1))], axis=1),   # G^(1) = [0_d^T, -1] : (1, d+1)
+                        np.concatenate([X, -np.ones((n, 1))], axis=1),                  # G^(2) = [X, -1_n]   : (n, d+1)
+                        np.concatenate([-X, -np.ones((n, 1))], axis=1)                  # G^(3) = [-X, -1_n]  : (n, d+1)
                        ])
 
-    h = np.concatenate([np.zeros((1, 1)), y, -y]) # h(1) = 0, h(2) = y, h(3) = -y
+    h = np.concatenate([np.zeros((1, 1)), y, -y]) # h^(1) = 0, h^(2) = y, h^(3) = -y
 
     cvxopt.solvers.options["show_progress"] = False
 
@@ -147,46 +141,89 @@ def synRegExperiments():
       - genData 의 y[0] *= -0.1 은 학습 데이터에만 적용되는 의도적 이상치다.
         (d.2) 분석에서 이게 핵심 논점이 된다.
     """
-
     def genData(n_points, is_training=False):
-        """합성 데이터 생성 (과제 PDF 템플릿 그대로)."""
-        X = np.random.randn(n_points, d)                              # 입력 행렬
-        X = np.concatenate((np.ones((n_points, 1)), X), axis=1)       # 절편항 추가
-        y = X @ w_true + np.random.randn(n_points, 1) * noise         # 정답 라벨
+        '''
+        This function generates synthetic data
+        '''
+        X = np.random.randn(n_points, d) # input matrix
+        X = np.concatenate((np.ones((n_points, 1)), X), axis=1) # augment input
+        y = X @ w_true + np.random.randn(n_points, 1) * noise # ground truth label
         if is_training:
-            y[0] *= -0.1                                              # 이상치 주입
+            y[0] *= -0.1
         return X, y
-
     n_runs = 50
     n_train = 30
     n_test = 1000
     d = 5
     noise = 0.2
-    train_loss = np.zeros([n_runs, 3, 3])   # n_runs x n_models x n_metrics
-    test_loss = np.zeros([n_runs, 3, 3])    # n_runs x n_models x n_metrics
+    train_loss = np.zeros([n_runs, 3, 3]) # n_runs * n_models * n_metrics
+    test_loss = np.zeros([n_runs, 3, 3]) # n_runs * n_models * n_metrics
 
-    # TODO: 아래 시드를 본인 학번으로 바꿀 것
-    np.random.seed(42)
-
+    # TODO: Change the following random seed to one of your student IDs
+    np.random.seed(101272513)
     for r in range(n_runs):
-
         w_true = np.random.randn(d + 1, 1)
         Xtrain, ytrain = genData(n_train, is_training=True)
         Xtest, ytest = genData(n_test, is_training=False)
-
         w_L2 = minimizeL2(Xtrain, ytrain)
         w_L1 = minimizeL1(Xtrain, ytrain)
         w_Linf = minimizeLinf(Xtrain, ytrain)
 
-        # TODO: 세 모델의 학습 데이터 성능 평가 (각 모델마다 L2, L1, Linf 손실)
-        #       -> train_loss[r] 에 저장
+        # TODO: Evaluate the three models' performance (for each model,
+        #       calculate the L2, L1 and L infinity losses on the training
+        #       data). Save them to `train_loss`
+        
+        # Calculate predicted values for each model
+        y_pred_L2_train = Xtrain @ w_L2
+        y_pred_L1_train = Xtrain @ w_L1
+        y_pred_Linf_train = Xtrain @ w_Linf
 
-        # TODO: 세 모델의 테스트 데이터 성능 평가 (각 모델마다 L2, L1, Linf 손실)
-        #       -> test_loss[r] 에 저장
+        # L2 eval
+        train_loss[r, 0, 0] = 0.5 * np.mean((ytrain - y_pred_L2_train) ** 2)
+        train_loss[r, 0, 1] = np.mean(np.abs(ytrain - y_pred_L2_train))
+        train_loss[r, 0, 2] = np.max(np.abs(ytrain - y_pred_L2_train))
 
-    # TODO: 50회 평균 계산 (어느 축으로 평균낼지 주의)
-    # TODO: (3, 3) train_loss 와 (3, 3) test_loss 반환
-    raise NotImplementedError
+        # L1 eval
+        train_loss[r, 1, 0] = 0.5 * np.mean((ytrain - y_pred_L1_train) ** 2)
+        train_loss[r, 1, 1] = np.mean(np.abs(ytrain - y_pred_L1_train))
+        train_loss[r, 1, 2] = np.max(np.abs(ytrain - y_pred_L1_train))
+
+        # Linf eval
+        train_loss[r, 2, 0] = 0.5 * np.mean((ytrain - y_pred_Linf_train) ** 2)
+        train_loss[r, 2, 1] = np.mean(np.abs(ytrain - y_pred_Linf_train))
+        train_loss[r, 2, 2] = np.max(np.abs(ytrain - y_pred_Linf_train))
+
+        # TODO: Evaluate the three models' performance (for each model,
+        #       calculate the L2, L1 and L infinity losses on the test
+        #       data). Save them to `test_loss` 
+
+        # Calculate predicted values for each model
+        y_pred_L2_test = Xtest @ w_L2
+        y_pred_L1_test = Xtest @ w_L1
+        y_pred_Linf_test = Xtest @ w_Linf
+
+        # L2 eval
+        test_loss[r, 0, 0] = 0.5 * np.mean((ytest - y_pred_L2_test) ** 2)
+        test_loss[r, 0, 1] = np.mean(np.abs(ytest - y_pred_L2_test))
+        test_loss[r, 0, 2] = np.max(np.abs(ytest - y_pred_L2_test))
+
+        # L1 eval
+        test_loss[r, 1, 0] = 0.5 * np.mean((ytest - y_pred_L1_test) ** 2)
+        test_loss[r, 1, 1] = np.mean(np.abs(ytest - y_pred_L1_test))
+        test_loss[r, 1, 2] = np.max(np.abs(ytest - y_pred_L1_test))
+
+        # Linf eval
+        test_loss[r, 2, 0] = 0.5 * np.mean((ytest - y_pred_Linf_test) ** 2)
+        test_loss[r, 2, 1] = np.mean(np.abs(ytest - y_pred_Linf_test))
+        test_loss[r, 2, 2] = np.max(np.abs(ytest - y_pred_Linf_test))
+
+    # TODO: compute the average losses over runs / 50회 평균 계산 (어느 축으로 평균낼지 주의)
+    # TODO: return a 3-by-3 training loss variable and a 3-by-3 test loss variable / (3, 3) train_loss 와 (3, 3) test_loss 반환
+    train_loss_avg = np.mean(train_loss, axis=0)
+    test_loss_avg = np.mean(test_loss, axis=0)
+
+    return train_loss_avg, test_loss_avg
+    
 
 
 def preprocessCCS(dataset_folder):
