@@ -33,10 +33,11 @@ def minimizeL2(X, y):
     Returns:
         w: (d, 1)
     """
-    # TODO: 구현
-    XT = X.T @ X # XT: (d, d)
-    yT = X.T @ y # yT: (d, 1)
-    w = np.linalg.solve(XT, yT) # w: (d, 1)
+    X_T = X.T
+    A = X_T @ X # A = X^T X : (d, d)
+    b = X_T @ y # b = X^T y : (d, 1)
+    # Aw = b 
+    w = np.linalg.solve(A, b) # w: (d, 1)
     return w
 
 def minimizeL1(X, y):
@@ -55,7 +56,6 @@ def minimizeL1(X, y):
     Returns:
         w: (d, 1)
     """
-    # TODO: 구현
     # first d variables are w, second n variables are delta
     n, d = X.shape
 
@@ -70,9 +70,10 @@ def minimizeL1(X, y):
 
     cvxopt.solvers.options["show_progress"] = False
 
-    c = cvxopt.matrix(c.astype(float)) # cvxopt.matrix requires float64 dtype
-    G = cvxopt.matrix(G.astype(float))
-    h = cvxopt.matrix(h.astype(float))
+    c = cvxopt.matrix(c) # cvxopt.matrix requires float64 dtype
+    G = cvxopt.matrix(G)
+    h = cvxopt.matrix(h)
+
     res = cvxopt.solvers.lp(c, G, h) # LINE 15: [BUG...], because [REASON...].
     w = res['x'][:d] # LINE 16: [BUG...], because [REASON...].
     return np.array(w)
@@ -80,11 +81,9 @@ def minimizeL1(X, y):
 
 def minimizeLinf(X, y):
     """
-    Q1(c.5) [1%]  L-infinity 손실 회귀를 LP로 푼다.
+    w = argmin_w ||Xw - y||_inf
 
-        w = argmin_w  ||Xw - y||_inf
-
-    LP 형태 (joint variable u = [w; delta] in R^{d+1}):
+    LP (joint variable u = [w; delta] in R^{d+1}):
         min_{w,delta}  delta
         s.t.           delta >= 0
                        Xw - y <= delta * 1_n
@@ -109,7 +108,26 @@ def minimizeLinf(X, y):
       - cvxopt.matrix 변환 잊지 말 것.
     """
     # TODO: 구현
-    raise NotImplementedError
+    n, d = X.shape
+
+    c = np.concatenate([np.zeros(d), np.ones(1)])
+
+    G = np.concatenate([np.concatenate([np.zeros((1, d)), -np.ones((1, 1))], axis=1),   # G(1) = [0_d^T, -1] : (1, d+1)
+                        np.concatenate([X, -np.ones((n, 1))], axis=1),                  # G(2) = [X, -1_n]   : (n, d+1)
+                        np.concatenate([-X, -np.ones((n, 1))], axis=1)                  # G(3) = [-X, -1_n]  : (n, d+1)
+                       ])
+
+    h = np.concatenate([np.zeros((1, 1)), y, -y]) # h(1) = 0, h(2) = y, h(3) = -y
+
+    cvxopt.solvers.options["show_progress"] = False
+
+    c = cvxopt.matrix(c)
+    G = cvxopt.matrix(G)
+    h = cvxopt.matrix(h)
+
+    res = cvxopt.solvers.lp(c, G, h)
+    w = res['x'][:d]
+    return np.array(w)
 
 
 def synRegExperiments():
