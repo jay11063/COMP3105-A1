@@ -14,13 +14,10 @@ import os
 import numpy as np
 import pandas as pd
 import cvxopt
-from cvxopt import solvers
 from scipy.optimize import minimize
 
 from StudentID import ID
 
-# 솔버 출력 억제 (상수 할당이므로 top-level 허용됨)
-solvers.options['show_progress'] = False
 
 
 # ============================================================================
@@ -36,11 +33,11 @@ def minimizeL2(X, y):
     Returns:
         w: (d, 1)
     """
-    X_T = X.T
-    A = X_T @ X # A = X^T X : (d, d)
-    b = X_T @ y # b = X^T y : (d, 1)
+    # X_T = X.T
+    # A = X_T @ X # A = X^T X : (d, d)
+    # b = X_T @ y # b = X^T y : (d, 1)
     # Aw = b 
-    w = np.linalg.solve(A, b) # w: (d, 1)
+    w = np.linalg.solve(X.T @ X, X.T @ y) # w: (d, 1)
     return w
 
 def minimizeL1(X, y):
@@ -62,18 +59,27 @@ def minimizeL1(X, y):
     # first d variables are w, second n variables are delta
     n, d = X.shape
 
-    c = np.concatenate([np.zeros(d), np.ones(n)]) # c: (d+n, 1) / LINE 5: [BUG...], because [REASON...].
+    # c^T = [0_d 1_n] : (d+n, 1)
+    c = np.concatenate([np.zeros(d), np.ones(n)]) # LINE 5: [BUG...], because [REASON...].
 
+    # G = [G^(1) = [0_(n*d) -I_n]
+    #      G^(2) = [   X    -I_n]
+    #      G^(3) = [  -X    -I_n]]
+    # G : (3n, d+n)
     G = np.concatenate([np.concatenate([np.zeros_like(X), -np.eye(n)], axis=1), # -delta ⪯ 0
                         np.concatenate([X, -np.eye(n)], axis=1), # Xw - y ⪯ delta
                         np.concatenate([-X, -np.eye(n)], axis=1) # y - Xw ⪯ delta / LINE 9: [BUG...], because [REASON...].
-                       ]) # G: (3n, d+n)
+                       ])
 
+    # h = [h^(1) = 0_n
+    #      h^(2) = y
+    #      h^(3) = -y ]
+    # h : (3n, 1)
     h = np.concatenate([np.zeros_like(y), y, -y])
 
     cvxopt.solvers.options["show_progress"] = False
 
-    c = cvxopt.matrix(c) # cvxopt.matrix requires float64 dtype
+    c = cvxopt.matrix(c)
     G = cvxopt.matrix(G)
     h = cvxopt.matrix(h)
 
@@ -97,24 +103,26 @@ def minimizeLinf(X, y):
         y: (n, 1)
     Returns:
         w: (d, 1)
-
-      - shapes:
-            c:     (d+1, 1)
-            G^(1): (1, d+1)     h^(1): (1, 1)
-            G^(2): (n, d+1)     h^(2): (n, 1)
-            G^(3): (n, d+1)     h^(3): (n, 1)
-        -> G: (2n+1, d+1),  h: (2n+1, 1)
     """
     n, d = X.shape
 
+    # c = [0_d 1] : (d+1, 1)
     c = np.concatenate([np.zeros(d), np.ones(1)])
 
-    G = np.concatenate([np.concatenate([np.zeros((1, d)), -np.ones((1, 1))], axis=1),   # G^(1) = [0_d^T, -1] : (1, d+1)
-                        np.concatenate([X, -np.ones((n, 1))], axis=1),                  # G^(2) = [X, -1_n]   : (n, d+1)
-                        np.concatenate([-X, -np.ones((n, 1))], axis=1)                  # G^(3) = [-X, -1_n]  : (n, d+1)
+    # G = [ G^(1) = [0_d^T, -1] : (1, d+1)
+    #       G^(2) = [X, -1_n]   : (n, d+1)
+    #       G^(3) = [-X, -1_n]  : (n, d+1) ]
+    # G : (2n+1, d+1)
+    G = np.concatenate([np.concatenate([np.zeros((1, d)), -np.ones((1, 1))], axis=1),   
+                        np.concatenate([X, -np.ones((n, 1))], axis=1),                  
+                        np.concatenate([-X, -np.ones((n, 1))], axis=1)                  
                        ])
 
-    h = np.concatenate([np.zeros((1, 1)), y, -y]) # h^(1) = 0, h^(2) = y, h^(3) = -y
+    # h = [ h^(1) = 0
+    #       h^(2) = y
+    #       h^(3) = -y ]
+    # h : (2n+1, 1)
+    h = np.concatenate([np.zeros((1, 1)), y, -y]) # 
 
     cvxopt.solvers.options["show_progress"] = False
 
@@ -159,11 +167,11 @@ def synRegExperiments():
         weights = [w_L2, w_L1, w_Linf]
         
         for model_idx, w in enumerate(weights):
+            train_err = Xtrain @ w - ytrain
+            test_err = Xtest @ w - ytest
             # TODO: Evaluate the three models' performance (for each model,
             #       calculate the L2, L1 and L infinity losses on the training
             #       data). Save them to `train_loss`
-            train_err = ytrain - Xtrain @ w
-            test_err = ytest - Xtest @ w
 
             train_loss[r, model_idx, 0] = 0.5 * np.mean(train_err ** 2) # L2
             train_loss[r, model_idx, 1] = np.mean(np.abs(train_err))    # L1
@@ -190,8 +198,8 @@ def preprocessCCS(dataset_folder):
 
     df = pd.read_excel(file_path)
     
-    X = df.iloc[:, :8].to_numpy()
-    y = df.iloc[:,8:9].to_numpy()
+    X = df.iloc[:, :-1].to_numpy()
+    y = df.iloc[:,-1:].to_numpy()
 
     return X, y
 
@@ -227,8 +235,8 @@ def runCCS(dataset_folder):
         weights = [w_L2, w_L1, w_Linf]
 
         for model_idx, w in enumerate(weights):
-            train_err = ytrain - Xtrain @ w
-            test_err = ytest - Xtest @ w
+            train_err = Xtrain @ w - ytrain
+            test_err = Xtest @ w - ytest
 
             # TODO: Evaluate the three models' performance (for each model,
             #       calculate the L2, L1 and L infinity losses on the training

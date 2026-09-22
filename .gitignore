@@ -3,3 +3,4 @@ __MACOSX/
 .venv/
 StudentID.py
 data/CCS/
+__pycache__/
