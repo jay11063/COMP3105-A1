@@ -268,19 +268,17 @@ def runCCS(dataset_folder):
 
 def linearRegL2Obj(w, X, y):
     """
-    Q2(a.1) [1%]  선형회귀 L2 목적함수 값.
-
-        J(w) = (1 / 2n) * ||Xw - y||_2^2
+    J(w) = (1 / 2n) * ||Xw - y||_2^2
 
     Args:
-        w: (d, 1) 파라미터
-        X: (n, d) 입력 행렬
-        y: (n, 1) 라벨
+        w: (d, 1)
+        X: (n, d)
+        y: (n, 1)
     Returns:
-        obj_val: 스칼라 (배열이 아니라 실수여야 scipy.optimize.minimize 가 잘 동작)
+        obj_val: scalar
     """
-    # TODO: 구현
-    raise NotImplementedError
+    obj_val = 0.5 * np.mean((X @ w - y)**2)
+    return obj_val
 
 
 def linearRegL2Grad(w, X, y):
