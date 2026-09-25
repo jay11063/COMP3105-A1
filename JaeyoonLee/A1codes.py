@@ -283,20 +283,15 @@ def linearRegL2Obj(w, X, y):
 
 def linearRegL2Grad(w, X, y):
     """
-    Q2(a.1) [1%]  위 목적함수의 해석적 그래디언트.
+    ∇J(w) = (1/n) X^T (Xw - y)
 
     Args:
-        w: (d, 1) 파라미터
-        X: (n, d) 입력 행렬
-        y: (n, 1) 라벨
+        w: (d, 1)
+        X: (n, d)
+        y: (n, 1)
     Returns:
         gradient: (d, 1)
-
-    구현 메모:
-      - 손으로 미분한 뒤, autograd 의 grad 함수로 계산한 값과 비교해 검증할 것.
-        (autograd 는 requirements.txt 에 이미 들어 있음)
     """
-    # TODO: 구현
     n = X.shape[0]
     gradient = (1.0 / n) * X.T @ (X @ w - y)
     return gradient
@@ -326,11 +321,12 @@ def find_opt(obj_func, grad_func, X, y):
 
     # TODO: w 하나만 인자로 받는 목적함수 `func` 정의
     def func(w):
-        pass
+        return obj_func(w[:, None], X, y)
 
     # TODO: w 하나만 인자로 받는 그래디언트 함수 `gd` 정의
     def gd(w):
-        pass
+        gradient = grad_func(w[:,None], X, y)
+        return gradient.flatten()
 
     return minimize(func, w_0, jac=gd)['x'][:, None]
 
