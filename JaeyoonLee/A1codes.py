@@ -297,7 +297,9 @@ def linearRegL2Grad(w, X, y):
         (autograd 는 requirements.txt 에 이미 들어 있음)
     """
     # TODO: 구현
-    raise NotImplementedError
+    n = X.shape[0]
+    gradient = (1.0 / n) * X.T @ (X @ w - y)
+    return gradient
 
 
 def find_opt(obj_func, grad_func, X, y):
@@ -320,13 +322,17 @@ def find_opt(obj_func, grad_func, X, y):
     """
     d = X.shape[1]
     # TODO: 크기 d 의 1-D 랜덤 초기 파라미터 생성
-    w_0 = None
+    w_0 = np.random.randn(d)
 
     # TODO: w 하나만 인자로 받는 목적함수 `func` 정의
-    # TODO: w 하나만 인자로 받는 그래디언트 함수 `gd` 정의
+    def func(w):
+        pass
 
-    # return minimize(func, w_0, jac=gd)['x'][:, None]
-    raise NotImplementedError
+    # TODO: w 하나만 인자로 받는 그래디언트 함수 `gd` 정의
+    def gd(w):
+        pass
+
+    return minimize(func, w_0, jac=gd)['x'][:, None]
 
 
 def logisticRegObj(w, X, y):
