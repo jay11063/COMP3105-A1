@@ -421,7 +421,7 @@ def synClsExperiments():
         train_acc = np.mean(ytrain_hat == ytrain) # TODO: Compute the accuracy of the training set
     
         ytest_hat = (Xtest @ w_logit > 0).astype(int) # TODO: Compute predicted labels of the test points
-        test_acc = np.mean(ytest_hat - ytest) # TODO: Compute the accuracy of the test set
+        test_acc = np.mean(ytest_hat == ytest) # TODO: Compute the accuracy of the test set
 
         return train_acc, test_acc
 
