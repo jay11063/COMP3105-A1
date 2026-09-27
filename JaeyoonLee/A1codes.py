@@ -353,7 +353,7 @@ def logisticRegObj(w, X, y):
     n = X.shape[0]
     z = X @ w
     obj_val = (1.0 / n) * (y.T @ np.logaddexp(0,-z) + (np.ones((n, 1)) - y).T @ np.logaddexp(z, 0))
-    return obj_val
+    return obj_val.item()
 
 
 def logisticRegGrad(w, X, y):
@@ -394,37 +394,34 @@ def synClsExperiments():
     """
 
     def genData(n_points, dim1, dim2):
-        """합성 데이터 생성 (과제 PDF 템플릿 그대로)."""
-        c0 = np.ones([1, dim1])                              # class 0 중심
-        c1 = -np.ones([1, dim1])                             # class 1 중심
-        X0 = np.random.randn(n_points, dim1 + dim2)          # class 0 입력
+        '''
+        This function generates synthetic data
+        '''
+        c0 = np.ones([1, dim1]) # class 0 center
+        c1 = -np.ones([1, dim1]) # class 1 center
+        X0 = np.random.randn(n_points, dim1 + dim2) # class 0 input
         X0[:, :dim1] += c0
-        X1 = np.random.randn(n_points, dim1 + dim2)          # class 1 입력
+        X1 = np.random.randn(n_points, dim1 + dim2) # class 1 input
         X1[:, :dim1] += c1
         X = np.concatenate((X0, X1), axis=0)
-        X = np.concatenate((np.ones((2 * n_points, 1)), X), axis=1)   # 절편항
-        y = np.concatenate([np.zeros([n_points, 1]),
-                            np.ones([n_points, 1])], axis=0)
+        X = np.concatenate((np.ones((2 * n_points, 1)), X), axis=1) # augmentation
+        y = np.concatenate([np.zeros([n_points, 1]), np.ones([n_points, 1])], axis=0)
         return X, y
 
     def runClsExp(m=100, dim1=2, dim2=2):
-        """주어진 하이퍼파라미터로 분류 실험 1회 실행."""
+        '''
+        Run classification experiment with the specified arguments
+        '''
         n_test = 1000
         Xtrain, ytrain = genData(m, dim1, dim2)
         Xtest, ytest = genData(n_test, dim1, dim2)
 
         w_logit = find_opt(logisticRegObj, logisticRegGrad, Xtrain, ytrain)
-
-        # TODO: 학습 데이터의 예측 라벨 계산
-        #       (Xw > 0 이면 1, 아니면 0. sigmoid(Xw) > 0.5 와 동치)
-        ytrain_hat = None
-        # TODO: 학습 정확도 계산
-        train_acc = None
-
-        # TODO: 테스트 데이터의 예측 라벨 계산
-        ytest_hat = None
-        # TODO: 테스트 정확도 계산
-        test_acc = None
+        ytrain_hat = 1 if Xtrain @ w_logit > 0 else 0 # TODO: Compute predicted labels of the training points
+        train_acc = np.mean(ytrain_hat - ytrain) # TODO: Compute the accuracy of the training set
+    
+        ytest_hat = 1 if Xtest @ w_logit > 0 else 0 # TODO: Compute predicted labels of the test points
+        test_acc = np.mean(ytest_hat - ytest) # TODO: Compute the accuracy of the test set
 
         return train_acc, test_acc
 
@@ -432,8 +429,8 @@ def synClsExperiments():
     train_acc = np.zeros([n_runs, 4, 3])
     test_acc = np.zeros([n_runs, 4, 3])
 
-    # TODO: 아래 시드를 본인 학번으로 바꿀 것
-    np.random.seed(42)
+    # TODO: Change the following random seed to one of your student IDs
+    np.random.seed(ID)
 
     for r in range(n_runs):
         for i, m in enumerate((10, 50, 100, 200)):
@@ -443,9 +440,13 @@ def synClsExperiments():
         for i, dim2 in enumerate((1, 2, 4, 8)):
             train_acc[r, i, 2], test_acc[r, i, 2] = runClsExp(dim2=dim2)
 
-    # TODO: 50회 평균 계산
-    # TODO: (4, 3) train_acc 와 (4, 3) test_acc 반환
-    raise NotImplementedError
+
+    # TODO: compute the average accuracies over runs
+    # TODO: return a 4-by-3 training accuracy variable and a 4-by-3 test accuracy variable
+    avg_train_acc = np.mean(train_acc, axis=0)
+    avg_test_acc = np.mean(test_acc, axis=0)
+
+    return avg_train_acc, avg_test_acc
 
 
 def preprocessBCW(dataset_folder):
