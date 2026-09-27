@@ -468,10 +468,10 @@ def preprocessBCW(dataset_folder):
     # TODO: 구현
     file_path = os.path.join(dataset_folder, 'wdbc.data')
 
-    df = pd.read_excel(file_path, header=None)
+    df = pd.read_csv(file_path, header=None)
     
     X = df.iloc[:, 2:].to_numpy()
-    y = df.iloc[:,1].replace({'M' : 1, 'B' : 0}).to_numpy()
+    y = df.iloc[:,1:2].replace({'M' : 1, 'B' : 0}).to_numpy()
 
     return X, y
 
