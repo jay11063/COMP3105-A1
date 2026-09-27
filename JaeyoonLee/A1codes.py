@@ -420,7 +420,7 @@ def synClsExperiments():
         ytrain_hat = (Xtrain @ w_logit > 0).astype(int) # TODO: Compute predicted labels of the training points
         train_acc = np.mean(ytrain_hat == ytrain) # TODO: Compute the accuracy of the training set
     
-        ytest_hat = (Xtest @ w_logit > 0).astype(int) # TODO: Compute predicted labels of the test points
+        ytest_hat = 1 if Xtest @ w_logit > 0 else 0 # TODO: Compute predicted labels of the test points
         test_acc = np.mean(ytest_hat == ytest) # TODO: Compute the accuracy of the test set
 
         return train_acc, test_acc
@@ -466,8 +466,14 @@ def preprocessBCW(dataset_folder):
       - y shape 이 (n, 1) 인지 확인.
     """
     # TODO: 구현
-    raise NotImplementedError
+    file_path = os.path.join(dataset_folder, 'wdbc.data')
 
+    df = pd.read_excel(file_path, header=None)
+    
+    X = df.iloc[:, 2:].to_numpy()
+    y = df.iloc[:,1].replace({'M' : 1, 'B' : 0}).to_numpy()
+
+    return X, y
 
 def runBCW(dataset_folder):
     """
@@ -479,27 +485,42 @@ def runBCW(dataset_folder):
     """
     X, y = preprocessBCW(dataset_folder)
     n, d = X.shape
-    X = np.concatenate((np.ones((n, 1)), X), axis=1)   # 절편항 추가
+    X = np.concatenate((np.ones((n, 1)), X), axis=1) # augment
 
     n_runs = 50
     train_acc = np.zeros([n_runs])
     test_acc = np.zeros([n_runs])
 
-    # TODO: 아래 시드를 본인 학번으로 바꿀 것
-    np.random.seed(42)
+    # TODO: Change the following random seed to one of your student IDs
+    np.random.seed(ID)
 
     for r in range(n_runs):
+        # TODO: Randomly partition the dataset into two parts (50%
+        #       training and 50% test; or as evenly as possible)
+        permuted_indices = np.random.permutation(n)
+        n_train = n//2
 
-        # TODO: 데이터를 무작위로 50% 학습 / 50% 테스트로 분할
-        #       (홀수 개면 최대한 균등하게)
-        Xtrain, ytrain, Xtest, ytest = None, None, None, None
+        train_idx = permuted_indices[:n_train]
+        test_idx = permuted_indices[n_train:]
+
+        Xtrain, ytrain = X[train_idx], y[train_idx]
+        Xtest, ytest =  X[test_idx], y[test_idx]
 
         w = find_opt(logisticRegObj, logisticRegGrad, Xtrain, ytrain)
 
-        # TODO: 학습 데이터 정확도 -> train_acc[r]
+        # TODO: Evaluate the model's accuracy on the training
+        # data. Save it to `train_acc`
+        ytrain_hat = (Xtrain @ w > 0).astype(int)
+        train_acc[r] = np.mean(ytrain_hat == ytrain)
 
-        # TODO: 테스트 데이터 정확도 -> test_acc[r]
+        # TODO: Evaluate the model's accuracy on the test
+        #       data. Save it to `test_acc`
+        ytest_hat = (Xtest @ w > 0).astype(int)
+        test_acc[r] = np.mean(ytest_hat == ytest)
 
-    # TODO: 50회 평균 계산
-    # TODO: 평균 학습 정확도와 평균 테스트 정확도 두 개를 반환
-    raise NotImplementedError
+    # TODO: compute the average accuracies over runs
+    train_acc_avg = np.mean(train_acc, axis=0)
+    test_acc_avg = np.mean(test_acc, axis=0)
+
+    # TODO: return two variables: the average training accuracy and average test accuracy
+    return train_acc_avg, test_acc_avg
