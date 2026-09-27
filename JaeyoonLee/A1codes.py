@@ -350,7 +350,10 @@ def logisticRegObj(w, X, y):
         이렇게 하면 sigmoid 자체를 계산하지 않고도 손실을 구할 수 있다.
     """
     # TODO: 구현
-    raise NotImplementedError
+    n = X.shape[0]
+    z = X @ w
+    obj_val = (1.0 / n) * (y.T @ np.logaddexp(0,-z) + (np.ones((n, 1)) - y).T @ np.logaddexp(z, 0))
+    return obj_val
 
 
 def logisticRegGrad(w, X, y):
@@ -370,7 +373,11 @@ def logisticRegGrad(w, X, y):
       - autograd 로 검증할 것.
     """
     # TODO: 구현
-    raise NotImplementedError
+    n = X.shape[0]
+    z = X @ w
+    sigmoid_Xw = np.exp(-np.logaddexp(0,-z))
+    grad = (1.0 / n) * X.T @ (sigmoid_Xw - y)
+    return grad
 
 
 def synClsExperiments():
