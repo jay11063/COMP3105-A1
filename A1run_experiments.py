@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CCS_FOLDER = os.path.abspath(os.path.join(HERE, 'data', 'CCS'))
 BCW_FOLDER = os.path.abspath(os.path.join(HERE, 'data', 'BCW'))
 
-DEC = 8   # 리포트에 쓸 소수점 자리수
+DEC = 4   # 리포트에 쓸 소수점 자리수
 
 
 # ---------------------------------------------------------------- 표 출력 유틸
