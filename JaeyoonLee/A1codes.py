@@ -298,32 +298,14 @@ def linearRegL2Grad(w, X, y):
 
 
 def find_opt(obj_func, grad_func, X, y):
-    """
-    Q2(a.2) [1%]  scipy.optimize.minimize 로 볼록 최적화 문제를 푼다.
-
-    Args:
-        obj_func:  (w, X, y) -> 스칼라   (w 는 (d, 1))
-        grad_func: (w, X, y) -> (d, 1)
-        X: (n, d), y: (n, 1)
-    Returns:
-        w: (d, 1) 최적 파라미터
-
-    구현 메모:
-      - minimize 는 1-D 배열만 받는다. 우리 obj_func/grad_func 는 열벡터를
-        받으므로 래퍼 안에서 reshape 변환이 필요하다.
-      - grad 역시 (d, 1) 로 나오므로 minimize 에 넘기기 전에 1-D 로 펴야 한다.
-      - 검증법: find_opt(linearRegL2Obj, linearRegL2Grad, X, y) 의 결과가
-        minimizeL2(X, y) 와 거의 같아야 한다. 같으면 이 함수는 맞은 것.
-    """
     d = X.shape[1]
-    # TODO: 크기 d 의 1-D 랜덤 초기 파라미터 생성
-    w_0 = np.random.randn(d)
+    w_0 = np.random.randn(d) # TODO: Initialize a random 1-D array of parameters of size d
 
-    # TODO: w 하나만 인자로 받는 목적함수 `func` 정의
+    # TODO: Define an objective function `func` that takes a single argument (w)
     def func(w):
         return obj_func(w[:, None], X, y)
-
-    # TODO: w 하나만 인자로 받는 그래디언트 함수 `gd` 정의
+    
+    # TODO: Define a gradient function `gd` that takes a single argument (w)
     def gd(w):
         gradient = grad_func(w[:,None], X, y)
         return gradient.flatten()
@@ -333,21 +315,14 @@ def find_opt(obj_func, grad_func, X, y):
 
 def logisticRegObj(w, X, y):
     """
-    Q2(b.3) [1%]  로지스틱 회귀 목적함수 (cross-entropy loss).
-
-        J(w) = (1/n) * [ -y^T log(sigma(Xw)) - (1 - y)^T log(1 - sigma(Xw)) ]
+    J(w) = (1/n) * [ -y^T log(sigma(Xw)) - (1 - y)^T log(1 - sigma(Xw)) ]
 
     Args:
-        w: (d, 1), X: (n, d), y: (n, 1)
+        w: (d, 1)
+        X: (n, d)
+        y: (n, 1)
     Returns:
-        obj_val: 스칼라
-
-    구현 메모:
-      - sigmoid 를 직접 계산한 뒤 log 를 취하면 underflow 로 log(0) -> NaN.
-      - (b.1), (b.2) 에서 유도한 항등식을 써서 np.logaddexp 로 바꿔 쓸 것.
-            -log(sigma(z))     = np.logaddexp(0, -z)
-            -log(1 - sigma(z)) = np.logaddexp(z, 0)
-        이렇게 하면 sigmoid 자체를 계산하지 않고도 손실을 구할 수 있다.
+        obj_val: scalar
     """
     # TODO: 구현
     n = X.shape[0]
@@ -358,19 +333,14 @@ def logisticRegObj(w, X, y):
 
 def logisticRegGrad(w, X, y):
     """
-    Q2(b.3) [1%]  로지스틱 회귀의 해석적 그래디언트.
-
-        grad J(w) = (1/n) * X^T (sigma(Xw) - y)
+    ∇J(w) = (1/n) * X^T (sigma(Xw) - y)
 
     Args:
-        w: (d, 1), X: (n, d), y: (n, 1)
+        w: (d, 1)
+        X: (n, d)
+        y: (n, 1)
     Returns:
         gradient: (d, 1)
-
-    구현 메모:
-      - 여기서는 sigma 를 실제로 계산해야 한다. 수치적으로 안정한 sigmoid
-        구현을 쓸 것 (z 가 큰 음수일 때 exp(-z) 가 overflow 한다).
-      - autograd 로 검증할 것.
     """
     # TODO: 구현
     n = X.shape[0]
@@ -381,17 +351,6 @@ def logisticRegGrad(w, X, y):
 
 
 def synClsExperiments():
-    """
-    Q2(c.1) [1%]  합성 이진분류 데이터에서 하이퍼파라미터별 정확도를 50회 평균.
-
-    Returns:
-        train_acc: (4, 3) 평균 학습 정확도
-        test_acc:  (4, 3) 평균 테스트 정확도
-
-        열 0: m     을 (10, 50, 100, 200) 으로 변화
-        열 1: dim1  을 (1, 2, 4, 8) 로 변화      <- 판별에 유용한 차원
-        열 2: dim2  를 (1, 2, 4, 8) 로 변화      <- 순수 노이즈 차원
-    """
 
     def genData(n_points, dim1, dim2):
         '''
@@ -440,32 +399,15 @@ def synClsExperiments():
         for i, dim2 in enumerate((1, 2, 4, 8)):
             train_acc[r, i, 2], test_acc[r, i, 2] = runClsExp(dim2=dim2)
 
-
     # TODO: compute the average accuracies over runs
-    # TODO: return a 4-by-3 training accuracy variable and a 4-by-3 test accuracy variable
     avg_train_acc = np.mean(train_acc, axis=0)
     avg_test_acc = np.mean(test_acc, axis=0)
 
+    # TODO: return a 4-by-3 training accuracy variable and a 4-by-3 test accuracy variable
     return avg_train_acc, avg_test_acc
 
 
 def preprocessBCW(dataset_folder):
-    """
-    Q2(d.1) [1%]  Breast Cancer Wisconsin (Diagnostic) 데이터 전처리.
-
-    Args:
-        dataset_folder: wdbc.data 가 들어 있는 폴더의 절대 경로
-    Returns:
-        X: (n, d) 특징 행렬 — 절편항은 붙이지 않는다
-        y: (n, 1) 라벨 벡터 (B -> 0, M -> 1)
-
-    구현 메모:
-      - wdbc.data 는 헤더가 없는 CSV 다. pandas.read_csv(..., header=None).
-      - 열 0 은 ID -> 반드시 제거. 열 1 이 진단(B/M) -> 타깃.
-        열 2 이후 30개가 특징.
-      - y shape 이 (n, 1) 인지 확인.
-    """
-    # TODO: 구현
     file_path = os.path.join(dataset_folder, 'wdbc.data')
 
     df = pd.read_csv(file_path, header=None)
@@ -476,13 +418,7 @@ def preprocessBCW(dataset_folder):
     return X, y
 
 def runBCW(dataset_folder):
-    """
-    Q2(d.2) [0.5%]  BCW 데이터에서 로지스틱 회귀를 50회 반복 평가.
 
-    Returns:
-        train_acc: 평균 학습 정확도 (스칼라)
-        test_acc:  평균 테스트 정확도 (스칼라)
-    """
     X, y = preprocessBCW(dataset_folder)
     n, d = X.shape
     X = np.concatenate((np.ones((n, 1)), X), axis=1) # augment
@@ -509,7 +445,7 @@ def runBCW(dataset_folder):
         w = find_opt(logisticRegObj, logisticRegGrad, Xtrain, ytrain)
 
         # TODO: Evaluate the model's accuracy on the training
-        # data. Save it to `train_acc`
+        #       data. Save it to `train_acc`
         ytrain_hat = (Xtrain @ w > 0).astype(int)
         train_acc[r] = np.mean(ytrain_hat == ytrain)
 
